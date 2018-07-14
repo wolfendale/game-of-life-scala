@@ -1,8 +1,10 @@
-sealed trait Cell
-case object Alive extends Cell
-case object Dead extends Cell
+import scala.util.Random
 
-case class GameOfLife(state: Seq[Seq[Cell]]) {
+sealed trait Cell
+object Alive extends Cell
+object Dead extends Cell
+
+case class GameOfLife(state: Array[Array[Cell]]) {
 
   def next: GameOfLife = {
 
@@ -34,10 +36,9 @@ case class GameOfLife(state: Seq[Seq[Cell]]) {
     state.lift(y).flatMap(_.lift(x))
 
   def set(x: Int, y: Int, cell: Cell): GameOfLife = {
-    val middle = state(y)
-    val newMiddle = middle.patch(x, Seq(cell), 1)
-    val newState = state.patch(y, Seq(newMiddle), 1)
-    GameOfLife(newState)
+    GameOfLife {
+      state.updated(y, state(y).updated(x, cell))
+    }
   }
 
   def neighbours(x0: Int, y0: Int): List[Cell] = {
@@ -47,4 +48,27 @@ case class GameOfLife(state: Seq[Seq[Cell]]) {
       if x != x0 || y != y0
     } yield get(x, y)
   }.flatten.toList
+}
+
+object GameOfLife {
+
+  def empty(size: Int = 100): GameOfLife =
+    GameOfLife(Array.fill(size)(Array.fill(size)(Dead)))
+
+  def random(size: Int = 100, seed: Long = 0): GameOfLife = {
+
+    val coords = for {
+      x <- 0 until size
+      y <- 0 until size
+    } yield (x, y)
+
+    if (seed != 0) {
+      Random.setSeed(seed)
+    }
+
+    coords.foldLeft(GameOfLife.empty(size)) {
+      case (m, (x, y)) =>
+        m.set(x, y, if (Random.nextBoolean) Alive else Dead)
+    }
+  }
 }

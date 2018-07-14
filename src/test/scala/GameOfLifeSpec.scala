@@ -8,7 +8,8 @@ class GameOfLifeSpec extends FreeSpec with MustMatchers with GeneratorDrivenProp
   implicit def noShrink[A]: Shrink[A] = Shrink.shrinkAny
 
   def genGameOfLife(size: Int, genCell: Gen[Cell] = arbitrary[Cell]): Gen[GameOfLife] =
-    Gen.listOfN(size, Gen.listOfN(size, arbitrary[Cell])).map(GameOfLife)
+    Gen.listOfN(size, Gen.listOfN(size, arbitrary[Cell]).map(_.toArray))
+      .map(s => GameOfLife(s.toArray))
 
   def frequencyCell(deadFreq: Int, liveFreq: Int): Gen[Cell] =
     Gen.frequency(
